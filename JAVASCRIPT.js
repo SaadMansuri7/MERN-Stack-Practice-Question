@@ -458,9 +458,794 @@ step1(function () {
 
 // ---
 
+// Q13: How do you create arrays in JavaScript? What are the different methods?
+// Answer: There are multiple ways to create arrays:
 
+// 1. Array Literal (Most common)
+const fruits = ['apple', 'banana', 'orange'];
 
+// 2. Array Constructor
+const numbers2 = new Array(1, 2, 3, 4, 5);
+const empty = new Array(5); // Creates array with 5 empty slots
 
+// 3. Array.from() - Create from iterable
+const str1 = "hello";
+const chars = Array.from(str); // ['h', 'e', 'l', 'l', 'o']
 
+const set = new Set([1, 2, 3, 2, 1]);
+const unique = Array.from(set); // [1, 2, 3]
 
+// With mapping function
+const doubled1 = Array.from([1, 2, 3], x => x * 2); // [2, 4, 6]
 
+//---
+
+// Q14: Explain array destructuring with examples.
+// Answer: Destructuring allows unpacking array values into variables.
+
+// Basic destructuring
+const colors = ['red', 'green', 'blue'];
+const [first, second, third] = colors;
+console.log(first);  // "red"
+console.log(second); // "green"
+
+// Skip elements
+const [primary, , tertiary] = colors;
+console.log(primary);  // "red"
+console.log(tertiary); // "blue"
+
+// Rest operator
+const numbers3 = [1, 2, 3, 4, 5];
+const [one, two, ...rest] = numbers3;
+console.log(one);  // 1
+console.log(two);  // 2
+console.log(rest); // [3, 4, 5]
+
+// Default values
+const [x1, y, z = 'default'] = ['x', 'y'];
+console.log(z); // "default"
+
+// Swapping variables
+let p = 1, q = 2;
+[p, q] = [q, p];
+console.log(p, q); // 2, 1
+
+// Function return values
+function getCoordinates() {
+    return [10, 20];
+}
+const [lat, lng] = getCoordinates();
+//---
+
+// Q15: What's the difference between push/pop and shift/unshift?
+// Answer:
+// Stack operations (end of array):
+// push() - Add to end
+// pop() - Remove from end
+
+// Queue operations (beginning of array):
+// unshift() - Add to beginning
+// shift() - Remove from beginning
+
+const arr3 = [1, 2, 3];
+
+// PUSH - Add to end (returns new length)
+arr3.push(4, 5);
+console.log(arr3); // [1, 2, 3, 4, 5]
+// POP - Remove from end (returns removed element)
+const last = arr3.pop();
+console.log(last); // 5
+console.log(arr3);  // [1, 2, 3, 4]
+// UNSHIFT - Add to beginning (returns new length)
+arr3.unshift(0);
+console.log(arr3); // [0, 1, 2, 3, 4]
+// SHIFT - Remove from beginning (returns removed element)
+const first1 = arr3.shift();
+console.log(first1); // 0
+console.log(arr3);   // [1, 2, 3, 4]
+// Performance Note: push / pop are faster(O(1)) than shift / unshift(O(n)) because shift / unshift re - index entire array.
+
+// ---
+
+// Q16: Explain map(), filter(), and reduce() with practical examples.
+// Answer:
+// These are the most important array methods for interviews and React development.
+// map() - Transform each element (returns new array)
+// filter() - Select elements based on condition (returns new array)
+// reduce() - Reduce array to single value
+{
+    numbers = [1, 2, 3, 4, 5];
+
+    // MAP - Transform each element
+    const doubled = numbers.map(num => num * 2);
+    // [2, 4, 6, 8, 10]
+
+    // FILTER - Select elements
+    const evens = numbers.filter(num => num % 2 === 0);
+    // [2, 4]
+
+    // REDUCE - Accumulate to single value
+    const sum = numbers.reduce((acc, num) => acc + num, 0);
+    // 15
+
+    // REAL-WORLD EXAMPLE: E-commerce cart
+    const cart = [
+        { name: 'Laptop', price: 1000, quantity: 1 },
+        { name: 'Mouse', price: 50, quantity: 2 },
+        { name: 'Keyboard', price: 100, quantity: 1 }
+    ];
+
+    // Get total price
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0); // 1200
+
+    // Get items over $75
+    const expensive = cart.filter(item => item.price > 75);
+    // [{ name: 'Laptop', ... }, { name: 'Keyboard', ... }]
+
+    // Apply 10% discount
+    const discounted = cart.map(item => ({ ...item, price: item.price * 0.9 }));
+    // Interview Gold: These methods don't mutate original array (immutable). Essential for React state management!
+}
+// ---
+
+// Q17: What's the difference between forEach() and map()?
+// Answer:
+// Feature         forEach()           map()
+// Returns         undefined           New array
+// Use case        Side effects        Transformation
+// Chainable       ❌ No               ✅ Yes
+// Break/continue  ❌ Can't            ❌ Can't
+
+{
+    const numbers = [1, 2, 3, 4, 5];
+
+    // forEach - For side effects only
+    numbers.forEach(num => {
+        console.log(num * 2); // Logs: 2, 4, 6, 8, 10
+    });    // Returns: undefined
+
+    // map - Returns new array
+    const doubled = numbers.map(num => num * 2);
+    console.log(doubled); // [2, 4, 6, 8, 10]
+
+    // ❌ Common mistake - expecting return value from forEach
+    const wrong = numbers.forEach(num => num * 2);
+    console.log(wrong); // undefined
+
+    // ✅ Chaining with map
+    const result = numbers
+        .map(x => x * 2)
+        .filter(x => x > 5)
+        .reduce((sum, x) => sum + x, 0);
+    console.log(result); // 30
+
+    // ❌ Can't chain with forEach
+    // numbers.forEach(...).filter(...) // Error!
+    // When to use:
+    // ✅ forEach() - Console logging, DOM manipulation, side effects
+    // ✅ map() - Data transformation, React rendering, creating new arrays
+}
+//-----
+
+{// Q18: Explain find(), findIndex(), some(), and every().
+    // Answer:
+    // find() - Returns first element that matches condition (or undefined)
+    // findIndex() - Returns index of first match (or -1)
+    // some() - Returns true if at least one element matches
+    // every() - Returns true if all elements match
+    const users = [
+        { id: 1, name: 'Alice', age: 25, active: true },
+        { id: 2, name: 'Bob', age: 17, active: false },
+        { id: 3, name: 'Charlie', age: 30, active: true }
+    ];
+
+    // FIND - Get first match
+    const user = users.find(u => u.age > 18);
+    console.log(user); // { id: 1, name: 'Alice', ... }
+
+    const notFound = users.find(u => u.age > 100);
+    console.log(notFound); // undefined
+
+    // FINDINDEX - Get position
+    const index = users.findIndex(u => u.name === 'Bob');
+    console.log(index); // 1
+
+    // SOME - At least one matches?
+    const hasMinor = users.some(u => u.age < 18);
+    console.log(hasMinor); // true
+
+    const hasAdmin = users.some(u => u.role === 'admin');
+    console.log(hasAdmin); // false
+
+    // EVERY - All match?
+    const allActive = users.every(u => u.active);
+    console.log(allActive); // false
+
+    const allHaveId = users.every(u => u.id);
+    console.log(allHaveId); // true
+
+    // Performance Tip: find() and some() stop iterating once condition is met (short-circuit).
+
+    // Common Use Cases:
+    // find() - Get user by ID, search
+    // some() - Validation (at least one error)
+    // every() - Validation (all fields valid)
+}
+
+// ---
+
+{
+    // Q19: How do you flatten nested arrays ? Explain flat() and flatMap().
+    // Answer:
+    // flat() - Flattens nested arrays to specified depth
+    // flatMap() - Maps then flattens(one level)
+
+    // FLAT - Remove nesting
+    const nested = [1, [2, 3], [4, [5, 6]]];
+
+    console.log(nested.flat());    // [1, 2, 3, 4, [5, 6]] (depth 1)
+    console.log(nested.flat(2));   // [1, 2, 3, 4, 5, 6] (depth 2)
+    console.log(nested.flat(Infinity)); // Completely flat
+
+    // FLATMAP - Map then flatten (depth 1 only)
+    const arr = [1, 2, 3];
+
+    // Traditional map (nested result)
+    const mapped = arr.map(x => [x, x * 2]);
+    console.log(mapped); // [[1, 2], [2, 4], [3, 6]]
+
+    // flatMap (automatically flattened)
+    const flatMapped = arr.flatMap(x => [x, x * 2]);
+    console.log(flatMapped); // [1, 2, 2, 4, 3, 6]
+
+    // PRACTICAL: Split sentences into words
+    const sentences = ["Hello world", "How are you"];
+    const words = sentences.flatMap(s => s.split(' '));
+    console.log(words); // ["Hello", "world", "How", "are", "you"]
+}
+
+// ---
+
+{
+    // Q20: What's the difference between slice() and splice()?
+    // Answer:
+    // Feature             slice()             splice()
+    // Mutates original    ❌No                ✅Yes
+    // Returns             New array(copy)     Removed elements
+    // Purpose             Extract portion     Add / remove elements
+
+    // Arguments:
+    // slice(start, end)          // end not included
+    // splice(start, deleteCount, ...itemsToAdd)
+
+    const arr = [1, 2, 3, 4, 5];
+
+    // SLICE - Extract (doesn't mutate)
+    const sliced = arr.slice(1, 4); // Start at index 1, end before 4
+    console.log(sliced); // [2, 3, 4]
+    console.log(arr);    // [1, 2, 3, 4, 5] (unchanged)
+
+    // SPLICE - Modify (mutates original)
+    const removed = arr.splice(1, 2); // Remove 2 elements from index 1
+    console.log(removed); // [2, 3] (removed elements)
+    console.log(arr);     // [1, 4, 5] (modified!)
+
+    // SPLICE - Insert
+    const arr2 = [1, 2, 5];
+    arr2.splice(2, 0, 3, 4); // At index 2, remove 0, add 3, 4
+    console.log(arr2); // [1, 2, 3, 4, 5]
+
+    // SPLICE - Replace
+    const arr3 = [1, 2, 3, 4, 5];
+    arr3.splice(2, 2, 'a', 'b'); // Remove 2 elements, add 'a', 'b'
+    console.log(arr3); // [1, 2, 'a', 'b', 5]
+
+    //     When to use:
+    //      ✅ slice() - Copy arrays, extract portions(immutable operations)
+    //      ✅ splice() - Modify arrays in place(use carefully in React!)
+}
+
+// ---
+
+{
+    // Q21: How do you sort arrays? Explain the sort() method.
+    // Answer:
+    // sort() mutates the original array and sorts elements as strings by default!
+
+    // ⚠️ DEFAULT (converts to strings)
+    const numbers = [10, 5, 40, 25, 1000, 1];
+    numbers.sort();
+    console.log(numbers); // [1, 10, 1000, 25, 40, 5] ❌ Wrong! => because it will only compare the first digit of the number as string.
+
+    // ✅ CORRECT - Provide compare function
+    numbers.sort((a, b) => a - b); // Ascending
+    console.log(numbers); // [1, 5, 10, 25, 40, 1000] ✅
+
+    numbers.sort((a, b) => b - a); // Descending
+    console.log(numbers); // [1000, 40, 25, 10, 5, 1] ✅
+
+    // STRINGS (works by default)
+    const names = ['Charlie', 'Alice', 'Bob'];
+    names.sort();
+    console.log(names); // ['Alice', 'Bob', 'Charlie']
+
+    // OBJECTS - Sort by property
+    const users = [
+        { name: 'Charlie', age: 30 },
+        { name: 'Alice', age: 25 },
+        { name: 'Bob', age: 35 }
+    ];
+
+    users.sort((a, b) => a.age - b.age); // Sort by age
+    console.log(users);
+    // [{ name: 'Alice', age: 25 }, { name: 'Charlie', age: 30 }, ...]
+
+    users.sort((a, b) => a.name.localeCompare(b.name)); // Sort by name
+}
+// ---
+{
+    // Q21: Explain includes(), indexOf(), and lastIndexOf().
+    // Answer:
+    // includes() - Returns boolean
+    // indexOf() - Returns index or - 1
+    // lastIndexOf() - Returns last occurrence index or - 1
+
+    const arr = [1, 2, 3, 4, 3, 5];
+
+    // INCLUDES - Check existence (returns boolean)
+    console.log(arr.includes(3));    // true
+    console.log(arr.includes(10));   // false
+    console.log(arr.includes(3, 3)); // true (search from index 3)
+
+    // INDEXOF - Get first position
+    console.log(arr.indexOf(3));     // 2 (first occurrence)
+    console.log(arr.indexOf(10));    // -1 (not found)
+    console.log(arr.indexOf(3, 3));  // 4 (search from index 3)
+
+    // LASTINDEXOF - Get last position
+    console.log(arr.lastIndexOf(3)); // 4 (last occurrence)
+
+    // ⚠️ IMPORTANT: These use strict equality (===)
+    const mixed = [1, '1', 2];
+    console.log(mixed.includes(1));   // true
+    console.log(mixed.includes('1')); // true
+    console.log(mixed.indexOf(1));    // 0
+    console.log(mixed.indexOf('1'));  // 1
+
+    // NaN handling
+    const withNaN = [NaN, 1, 2];
+    console.log(withNaN.includes(NaN));  // true ✅
+    console.log(withNaN.indexOf(NaN));   // -1 ❌ (indexOf can't find NaN)
+}
+// ---
+{
+    // Q22: Explain Object.assign() and the spread operator for objects.
+    // Answer: Both are used to copy / merge objects(shallow copy).
+
+    // OBJECT.ASSIGN() - Copies properties to target object
+    const target = { a: 1, b: 2 };
+    const source = { b: 3, c: 4 };
+
+    const result = Object.assign(target, source);
+    console.log(result); // { a: 1, b: 3, c: 4 }
+    console.log(target); // { a: 1, b: 3, c: 4 } (mutated!)
+
+    // Better: Create new object (don't mutate)
+    const merged = Object.assign({}, target, source);
+
+    // SPREAD OPERATOR (Modern, preferred)
+    const obj1 = { a: 1, b: 2 };
+    const obj2 = { b: 3, c: 4 };
+
+    const combined = { ...obj1, ...obj2 };
+    console.log(combined); // { a: 1, b: 3, c: 4 }
+    console.log(obj1);     // { a: 1, b: 2 } (unchanged)
+
+    // CLONING OBJECTS
+    const original = { name: 'Alice', age: 25 };
+    const clone = { ...original };
+    clone.age = 30;
+    console.log(original.age); // 25 (not affected)
+
+    // ADDING/OVERRIDING PROPERTIES
+    const user = { name: 'Bob', age: 30 };
+    const updated = { ...user, age: 31, city: 'NYC' };
+    console.log(updated); // { name: 'Bob', age: 31, city: 'NYC' }
+
+    // ⚠️ SHALLOW COPY WARNING
+    const obj = {
+        name: 'Alice',
+        address: { city: 'NYC' }
+    };
+
+    const copy = { ...obj };
+    copy.address.city = 'LA';
+    console.log(obj.address.city); // "LA" (nested object shared!)
+
+    // ✅ DEEP COPY solutions
+    // 1. JSON method (doesn't work with functions, dates, undefined)
+    const deepCopy1 = JSON.parse(JSON.stringify(obj));
+
+    // 2. structuredClone (modern browsers)
+    const deepCopy2 = structuredClone(obj);
+}
+// ---
+{
+    // Q23: Explain Object.freeze(), Object.seal(), and their differences.
+    // Answer:
+    // Object.freeze() - Makes object completely immutable
+    // Object.seal() - Prevents adding / removing properties, but allows modification
+
+    // OBJECT.FREEZE() - Complete immutability
+    const frozen = { name: 'Alice', age: 25 };
+    Object.freeze(frozen);
+
+    frozen.age = 30;        // ❌ Ignored (strict mode: error)
+    frozen.city = 'NYC';    // ❌ Ignored
+    delete frozen.name;     // ❌ Ignored
+
+    console.log(frozen); // { name: 'Alice', age: 25 } (unchanged)
+
+    // OBJECT.SEAL() - Structure locked, values can change
+    const sealed = { name: 'Bob', age: 30 };
+    Object.seal(sealed);
+
+    sealed.age = 35;        // ✅ Works!
+    sealed.city = 'LA';     // ❌ Ignored
+    delete sealed.name;     // ❌ Ignored
+
+    console.log(sealed); // { name: 'Bob', age: 35 }
+
+    // CHECK STATUS
+    console.log(Object.isFrozen(frozen));  // true
+    console.log(Object.isSealed(sealed));  // true
+
+    // ⚠️ SHALLOW ONLY (nested objects not affected)
+    const obj = {
+        name: 'Charlie',
+        address: { city: 'NYC' }
+    };
+
+    Object.freeze(obj);
+    obj.name = 'David';           // ❌ Ignored
+    obj.address.city = 'LA';      // ✅ Works! (nested object not frozen)
+
+    console.log(obj); // { name: 'Charlie', address: { city: 'LA' } }
+}
+
+// ---
+
+{
+    // Q24: What is optional chaining(?.) and nullish coalescing(??) ?
+    //     Answer :
+    //     Modern operators(ES2020) for handling null / undefined safely.
+    // OPTIONAL CHAINING (?.)
+    // Problem: Nested property access
+    const user = {
+        name: 'Alice',
+        address: {
+            city: 'NYC'
+        }
+    };
+
+    // ❌ Old way (risky)
+    // console.log(user.profile.bio); // Error: Cannot read property 'bio'
+
+    // ❌ Old safe way (verbose)
+    const bio1 = user && user.profile && user.profile.bio;
+
+    // ✅ Optional chaining (clean)
+    const bio2 = user?.profile?.bio;
+    console.log(bio2); // undefined (no error!)
+
+    // OPTIONAL CHAINING with ARRAYS
+    const users = [
+        { name: 'Bob', posts: [{ title: 'Post 1' }] }
+    ];
+
+    console.log(users[0]?.posts?.[0]?.title); // "Post 1"
+    console.log(users[1]?.posts?.[0]?.title); // undefined (no error)
+
+    // OPTIONAL CHAINING with FUNCTIONS
+    const obj = {
+        greet: () => 'Hello'
+    };
+
+    console.log(obj.greet?.()); // "Hello"
+    console.log(obj.missing?.()); // undefined (no error)
+
+    // NULLISH COALESCING (??)
+    // Returns right side only if left is null/undefined (not 0, '', false)
+
+    const value1 = null ?? 'default';     // "default"
+    const value2 = undefined ?? 'default'; // "default"
+    const value3 = 0 ?? 'default';        // 0 (not null/undefined!)
+    const value4 = '' ?? 'default';       // '' (not null/undefined!)
+    const value5 = false ?? 'default';    // false (not null/undefined!)
+
+    // COMPARISON with OR (||)
+    console.log(0 || 'default');    // "default" (0 is falsy)
+    console.log(0 ?? 'default');    // 0 (0 is not null/undefined)
+
+    console.log('' || 'default');   // "default" ('' is falsy)
+    console.log('' ?? 'default');   // '' ('' is not null/undefined)
+
+    // PRACTICAL EXAMPLE: Default values
+    function greet(name) {
+        // ✅ Correctly handles empty string
+        const userName = name ?? 'Guest';
+        return `Hello, ${userName}`;
+    }
+
+    console.log(greet('Alice')); // "Hello, Alice"
+    console.log(greet(''));      // "Hello, " (empty string kept)
+    console.log(greet(null));    // "Hello, Guest"
+
+    // COMBINED USAGE
+    const user2 = {
+        settings: {
+            notifications: false
+        }
+    };
+
+    const notify = user2?.settings?.notifications ?? true;
+    console.log(notify); // false (not undefined, actual value)
+}
+
+{
+    // Q25: Explain shallow copy vs deep copy of objects.
+    // Answer:
+    // Shallow Copy - Copies top - level properties(nested objects shared)
+    // Deep Copy - Recursively copies all levels(completely independent)
+
+    // SHALLOW COPY METHODS
+    const original = {
+        name: 'Alice',
+        age: 25,
+        address: { city: 'NYC' }
+    };
+
+    // Method 1: Spread operator
+    const copy1 = { ...original };
+
+    // Method 2: Object.assign()
+    const copy2 = Object.assign({}, original);
+
+    // PROBLEM: Nested objects are shared!
+    copy1.name = 'Bob';           // ✅ Original unchanged
+    copy1.address.city = 'LA';    // ❌ Original changed too!
+
+    console.log(original.name);        // "Alice" (not affected)
+    console.log(original.address.city); // "LA" (affected!)
+
+    // DEEP COPY METHODS
+    // Method 1: JSON (simple but has limitations)
+    const deepCopy1 = JSON.parse(JSON.stringify(original));
+    deepCopy1.address.city = 'Chicago';
+    console.log(original.address.city); // "LA" (not affected)
+
+    // Method 2: structuredClone() (Modern, recommended)
+    const deepCopy2 = structuredClone(original);
+    deepCopy2.address.city = 'Boston';
+    console.log(original.address.city); // "LA" (not affected)
+
+    // ✅ structuredClone handles: Dates, Sets, Maps, TypedArrays
+    // ❌ Still can't clone: Functions, DOM nodes
+}
+
+//---
+
+{
+    //     Q26: What is asynchronous programming ? Why is it needed ?
+    //         Answer :
+    //         Asynchronous programming = Executing tasks without blocking the main thread, allowing other operations to continue.
+    //         Why needed ? JavaScript is single - threaded.Without async, long operations(API calls, file reading) would freeze the entire application.
+
+    //  What is a Promise ? Explain its states and basic usage.
+    //     Answer:
+    //     Promise = Object representing eventual completion(or failure) of an asynchronous operation.
+
+    // 3 States:
+    // Pending - Initial state, operation ongoing
+    // Fulfilled - Operation completed successfully
+    // Rejected - Operation failed
+
+    // CREATING A PROMISE
+    const myPromise = new Promise((resolve, reject) => {
+        const success = true;
+
+        setTimeout(() => {
+            if (success) {
+                resolve('Operation successful!'); // Fulfilled
+            } else {
+                reject('Operation failed!');      // Rejected
+            }
+        }, 1000);
+    });
+
+    // CONSUMING A PROMISE
+    myPromise
+        .then(result => {
+            console.log(result); // "Operation successful!"
+        })
+        .catch(error => {
+            console.error(error); // If rejected
+        })
+        .finally(() => {
+            console.log('Promise settled (fulfilled or rejected)');
+        });
+
+    // Explain Promise.all(), Promise.race(), Promise.allSettled(), and Promise.any().
+
+    // SETUP: Sample promises
+    const promise1 = Promise.resolve(3);
+    const promise2 = new Promise(resolve => setTimeout(() => resolve(42), 1000));
+    const promise3 = new Promise(resolve => setTimeout(() => resolve(100), 2000));
+    const promiseFail = Promise.reject('Error occurred');
+
+    // 1. PROMISE.ALL() - Waits for ALL to fulfill (or ONE to reject)
+    Promise.all([promise1, promise2, promise3])
+        .then(results => {
+            console.log(results); // [3, 42, 100] (after 2 seconds)
+        })
+        .catch(error => {
+            console.error('One failed:', error);
+        });
+
+    // If ANY promise rejects, entire Promise.all rejects
+    Promise.all([promise1, promiseFail, promise3])
+        .then(results => console.log('Success'))
+        .catch(error => console.error('Failed:', error)); // "Failed: Error occurred"
+
+    // 2. PROMISE.RACE() - Returns first settled (fulfilled OR rejected)
+    Promise.race([promise2, promise3])
+        .then(result => {
+            console.log('First finished:', result); // 42 (after 1 second)
+        });
+
+    Promise.race([promise2, promiseFail])
+        .then(result => console.log('Won:', result))
+        .catch(error => console.error('Lost:', error)); // Depends which finishes first
+
+    // 3. PROMISE.ALLSETTLED() - Waits for ALL (never rejects)
+    Promise.allSettled([promise1, promiseFail, promise3])
+        .then(results => {
+            console.log(results);
+            // [
+            //   { status: 'fulfilled', value: 3 },
+            //   { status: 'rejected', reason: 'Error occurred' },
+            //   { status: 'fulfilled', value: 100 }
+            // ]
+        });
+
+    // 4. PROMISE.ANY() - Returns first FULFILLED (ignores rejections)
+    const fail1 = Promise.reject('Error 1');
+    const fail2 = Promise.reject('Error 2');
+    const success = new Promise(resolve => setTimeout(() => resolve('Success'), 1000));
+
+    Promise.any([fail1, fail2, success])
+        .then(result => {
+            console.log('First success:', result); // "Success"
+        })
+        .catch(error => {
+            console.error('All failed'); // Only if ALL reject
+        });
+}
+//---
+
+{
+    //Q27:  What is async / await ? How is it different from Promises ?
+    //     Answer :
+    //     async / await = Syntactic sugar over Promises, makes asynchronous code look synchronous.
+
+    // PROMISE SYNTAX
+    function fetchData() {
+        return fetch('https://api.example.com/data')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                return data;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    // ASYNC/AWAIT SYNTAX (Same functionality, cleaner)
+    async function fetchDataAsync() {
+        try {
+            const response = await fetch('https://api.example.com/data');
+            const data = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+}
+
+//---
+
+{
+    //     Q28: What is the Event Loop ? Explain how JavaScript handles asynchronous code.
+    //         Answer:
+    //             Event Loop = Mechanism that handles asynchronous operations in JavaScript's single-threaded environment.
+
+    //Components:
+    // Call Stack - Executes synchronous code(LIFO)
+    // Web APIs - Handles asynchronous operations/callbacks(setTimeout, fetch, DOM events)
+    // Callback Queue - Stores callbacks from Web APIs(FIFO)
+    // Microtask Queue - Higher priority queue(Promises)
+    // Event Loop - Monitors and moves tasks means moves completed callbacks from the callback/microtask queue to Call Stack when it's empty.
+
+    // DETAILED EXAMPLE
+    console.log('A');
+
+    setTimeout(() => console.log('B'), 0);
+
+    Promise.resolve()
+        .then(() => console.log('C'))
+        .then(() => console.log('D'));
+
+    console.log('E');
+
+    // OUTPUT: A → E → C → D → B
+    // Explanation:
+    // 1. A (sync)
+    // 2. setTimeout queued (macrotask)
+    // 3. Promise queued (microtask)
+    // 4. E (sync)
+    // 5. Call stack empty → Process microtasks (C, D)
+    // 6. Process macrotasks (B)
+}
+
+//---
+
+{
+    // Q29: How does method chaining work ? Implement it.
+    // Answer:
+    // METHOD CHAINING - Return 'this' from methods
+    class Calculator {
+        constructor() {
+            this.value = 0;
+        }
+
+        add(n) {
+            this.value += n;
+            return this; // Enable chaining
+        }
+
+        subtract(n) {
+            this.value -= n;
+            return this;
+        }
+
+        multiply(n) {
+            this.value *= n;
+            return this;
+        }
+
+        divide(n) {
+            if (n !== 0) {
+                this.value /= n;
+            }
+            return this;
+        }
+
+        getResult() {
+            return this.value;
+        }
+    }
+
+    // CHAINING IN ACTION
+    const calc = new Calculator();
+    const result = calc
+        .add(10)
+        .multiply(2)
+        .subtract(5)
+        .divide(3)
+        .getResult();
+
+    console.log(result); // 5
+}
