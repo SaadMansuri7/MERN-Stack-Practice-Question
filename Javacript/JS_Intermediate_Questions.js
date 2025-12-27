@@ -196,190 +196,190 @@
 
 {
     // Q9: Implement Function.prototype.myCall
-    //    Function.prototype.myCall = function (context, ...cllingargs) {
-    //     context = context ?? globalThis;
-    //     let funKey = Symbol('fun');
-    //     context[funKey] = this;
-    //     let result = context[funKey](...cllingargs);
-    //     delete context[funKey];
-    //     return result;
-    // }
+       Function.prototype.myCall = function (context, ...cllingargs) {
+        context = context ?? globalThis;
+        let funKey = Symbol('fun');
+        context[funKey] = this;
+        let result = context[funKey](...cllingargs);
+        delete context[funKey];
+        return result;
+    }
 
-    // const person = {
-    //     name: "Saad"
-    // }
+    const person = {
+        name: "Saad"
+    }
 
-    // function greeeting(city, country) {
-    //     return `Hello ${this.name} from ${city}, ${country}`;
-    // }
+    function greeeting(city, country) {
+        return `Hello ${this.name} from ${city}, ${country}`;
+    }
 
-    // console.log(greeeting.myCall(person, "Ahmedabad", "India"));
+    console.log(greeeting.myCall(person, "Ahmedabad", "India"));
 }
 
 {
     // Q10: Implement Function.prototype.myApply
-    // Function.prototype.myApply = function (context, ...arrayargs) {
-    //     context = context ?? globalThis;
-    //     let funKey = Symbol('fun');
-    //     context[funKey] = this;
-    //     let result;
-    //     if (Array.isArray(arrayargs)) {
-    //         result = context[funKey](...arrayargs);
-    //     } else {
-    //         result = context[funKey]();
-    //     }
-    //     delete context[funKey];
-    //     return result;
-    // }
+    Function.prototype.myApply = function (context, ...arrayargs) {
+        context = context ?? globalThis;
+        let funKey = Symbol('fun');
+        context[funKey] = this;
+        let result;
+        if (Array.isArray(arrayargs)) {
+            result = context[funKey](...arrayargs);
+        } else {
+            result = context[funKey]();
+        }
+        delete context[funKey];
+        return result;
+    }
 
-    // const person = {
-    //     name: "Saad"
-    // }
+    const person = {
+        name: "Saad"
+    }
 
-    // function greeeting(city, country) {
-    //     return `Hello ${this.name} from ${city}, ${country}`;
-    // }
+    function greeeting(city, country) {
+        return `Hello ${this.name} from ${city}, ${country}`;
+    }
 
-    // console.log(greeeting.myApply(person, ["Ahmedabad", "India"]));
+    console.log(greeeting.myApply(person, ["Ahmedabad", "India"]));
 }
 
 {
     // Q11: Implement Promise that runs n times
-    // let attempt = 0;
-    // async function retryPromise(fun, count) {
-    //     try {
-    //         await fun();
-    //     } catch (error) {
-    //         if (count === 0) {
-    //             throw error;
-    //         }
-    //         return retryPromise(fun, count - 1);
-    //     }
-    // }
+    let attempt = 0;
+    async function retryPromise(fun, count) {
+        try {
+            await fun();
+        } catch (error) {
+            if (count === 0) {
+                throw error;
+            }
+            return retryPromise(fun, count - 1);
+        }
+    }
 
-    // function fakeApi() {
-    //     return new Promise((resolve, reject) => {
-    //         attempt++;
-    //         console.log("Attempts: ", attempt);
-    //         if (attempt < 3) {
-    //             reject('Promise rejected!');
-    //         } else {
-    //             resolve('Promise resolved!');
-    //         }
-    //     })
-    // }
+    function fakeApi() {
+        return new Promise((resolve, reject) => {
+            attempt++;
+            console.log("Attempts: ", attempt);
+            if (attempt < 3) {
+                reject('Promise rejected!');
+            } else {
+                resolve('Promise resolved!');
+            }
+        })
+    }
 
-    // retryPromise(fakeApi, 4).then(res => console.log('success', res)).catch(err => console.log('error: ', err));
+    retryPromise(fakeApi, 4).then(res => console.log('success', res)).catch(err => console.log('error: ', err));
 }
 
 {
     // Q12: Implement Memoization
     // A memoization function stores (caches) the result of heavy or expensive computations so the same work is not done again
-    //     function memoization(fun) {
-    //     let cache = {};
-    //     return function (...args) {
-    //         let key = JSON.stringify(args);
-    //         if (cache[key]) {
-    //             console.log('Fetching from Cache');
-    //             return cache[key];
-    //         }
+        function memoization(fun) {
+        let cache = {};
+        return function (...args) {
+            let key = JSON.stringify(args);
+            if (cache[key]) {
+                console.log('Fetching from Cache');
+                return cache[key];
+            }
 
-    //         console.log('Computing....');
-    //         let result = fun.apply(this, args);
-    //         cache[key] = result;
-    //         return result;
-    //     }
-    // }
+            console.log('Computing....');
+            let result = fun.apply(this, args);
+            cache[key] = result;
+            return result;
+        }
+    }
 
-    // function heaveFun(a, b) {
-    //     for (let i = 0; i < 1e9; i++) { }
-    //     return a + b;
-    // }
+    function heaveFun(a, b) {
+        for (let i = 0; i < 1e9; i++) { }
+        return a + b;
+    }
 
-    // const memoryFun = memoization(heaveFun);
+    const memoryFun = memoization(heaveFun);
 
-    // console.log(memoryFun(2, 3));
-    // console.log(memoryFun(2, 3));
-    // console.log(memoryFun(2, 4));
+    console.log(memoryFun(2, 3));
+    console.log(memoryFun(2, 3));
+    console.log(memoryFun(2, 4));
 }
 
 {
     // Q13 Write a function to limit API calls per second
     // I limited API calls by tracking the number of calls in a 1-second window and resetting the counter every second.
     // Throttle controls frequency, rate limiting controls volume over time.
-    //     function rateLimit(fun, limit) {
-    //     let calls = 0;
-    //     let lastCall = Date.now();
+        function rateLimit(fun, limit) {
+        let calls = 0;
+        let lastCall = Date.now();
 
-    //     return function (...args) {
-    //         const now = Date.now();
+        return function (...args) {
+            const now = Date.now();
 
-    //         if (now - lastCall >= 1000) {
-    //             calls = 0;
-    //             lastCall = now;
-    //         }
+            if (now - lastCall >= 1000) {
+                calls = 0;
+                lastCall = now;
+            }
 
-    //         if (calls < limit) {
-    //             calls++;
-    //             return fun.apply(this, args);
-    //         } else {
-    //             console.log('Rate Limiting blocks the funtion!');
-    //         }
-    //     }
-    // }
+            if (calls < limit) {
+                calls++;
+                return fun.apply(this, args);
+            } else {
+                console.log('Rate Limiting blocks the funtion!');
+            }
+        }
+    }
 
-    // function apiCall(id) {
-    //     console.log('API Call: ', id + " Time : ", new Date().toLocaleTimeString());
-    // }
+    function apiCall(id) {
+        console.log('API Call: ', id + " Time : ", new Date().toLocaleTimeString());
+    }
 
-    // const callLimit = rateLimit(apiCall, 2);
+    const callLimit = rateLimit(apiCall, 2);
 
-    // callLimit(1);
-    // callLimit(2);
-    // callLimit(3);
-    // callLimit(4);   
+    callLimit(1);
+    callLimit(2);
+    callLimit(3);
+    callLimit(4);   
 }
 
 {
     // Q14 Implement a task scheduler
-    //     class TaskScheduler {
-    //     constructor() {
-    //         this.queue = [];
-    //         this.isRunning = false;
-    //     }
+        class TaskScheduler {
+        constructor() {
+            this.queue = [];
+            this.isRunning = false;
+        }
 
-    //     async run() {
-    //         if (this.isRunning) return;
+        async run() {
+            if (this.isRunning) return;
 
-    //         this.isRunning = true;
+            this.isRunning = true;
 
-    //         while (this.queue.length > 0) {
-    //             let { task } = this.queue.shift();
-    //             await task();
-    //         }
-    //         this.isRunning = false;
-    //     }
+            while (this.queue.length > 0) {
+                let { task } = this.queue.shift();
+                await task();
+            }
+            this.isRunning = false;
+        }
 
-    //     addTask(task, priority = 0) {
-    //         this.queue.push({ task, priority });
-    //         this.queue.sort((a, b) => b.priority - a.priority);
-    //         Promise.resolve().then(() => this.run());
-    //     }
-    // }
+        addTask(task, priority = 0) {
+            this.queue.push({ task, priority });
+            this.queue.sort((a, b) => b.priority - a.priority);
+            Promise.resolve().then(() => this.run());
+        }
+    }
 
-    // const scheduler = new TaskScheduler();
+    const scheduler = new TaskScheduler();
 
-    // scheduler.addTask(async () => {
-    //     console.log('Mediam priority task!')
-    // }, 5);
+    scheduler.addTask(async () => {
+        console.log('Mediam priority task!')
+    }, 5);
 
-    // scheduler.addTask(async () => {
-    //     console.log('Low priority task!')
-    // }, 1);
+    scheduler.addTask(async () => {
+        console.log('Low priority task!')
+    }, 1);
 
-    // scheduler.addTask(async () => {
-    //     console.log('High priority task!')
-    // }, 10);  
+    scheduler.addTask(async () => {
+        console.log('High priority task!')
+    }, 10);  
 
     // ⚠️ Common Interview Follow-ups (Be Ready)
     // ❓ What is the time complexity?
@@ -398,26 +398,26 @@
 
 {
     // Q15 Implement curring
-    //     function curry(fun) {
-    //     return function curried(...args) {
-    //         if (args.length >= fun.length) {
-    //             return fun.apply(this, args);
-    //         }
-    //         return function (...nextArgs) {
-    //             return curried.apply(this, args.concat(nextArgs))
-    //         }
-    //     }
-    // }
+        function curry(fun) {
+        return function curried(...args) {
+            if (args.length >= fun.length) {
+                return fun.apply(this, args);
+            }
+            return function (...nextArgs) {
+                return curried.apply(this, args.concat(nextArgs))
+            }
+        }
+    }
 
-    // function mul(a, b, c) {
-    //     return a * b * c;
-    // }
+    function mul(a, b, c) {
+        return a * b * c;
+    }
 
-    // const curring = curry(mul);
+    const curring = curry(mul);
 
-    // console.log(curring(1, 2, 3));
-    // console.log(curring(1)(2, 3));
-    // console.log(curring(1, 2)(3));
+    console.log(curring(1, 2, 3));
+    console.log(curring(1)(2, 3));
+    console.log(curring(1, 2)(3));
 }
 
 {
