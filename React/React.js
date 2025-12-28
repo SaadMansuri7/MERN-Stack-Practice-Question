@@ -337,3 +337,569 @@ import { useEffect, useLayoutEffect, useState } from "react";
     }
 }
 
+{
+    // Q11: What is the useState hook ? How does it work ?
+    //     Answer :
+    //         useState is a React Hook that allows functional components to have state.It returns an array with two elements: the current state value and a function to update that state.
+
+    // Syntax:
+    //     const [stateVariable, setStateFunction] = useState(initialValue);
+
+    // How it works:
+    //     You call useState(initialValue) which creates a state variable
+    //     React returns an array: [currentValue, updateFunction]
+    //     When you call the update function, React re - renders the component with new state
+    //     React preserves state between re - renders
+
+    // import { useState } from 'react';
+    function Counter() {
+        // Declare state variable 'count' with initial value 0
+        const [count, setCount] = useState(0);
+        //     ^state   ^updater    ^initial value
+
+        return (
+            <div>
+                <p>Count: {count}</p>
+                <button onClick={() => setCount(count + 1)}> Increment </button>
+            </div>
+        );
+    }
+}
+
+{
+    // Q12: How do you update state? What are the different ways?
+    //    Answer: State updates in React tell the component to re-render with new data. There are two main ways to update state: direct value updates and functional updates.
+
+    // Important: Never modify state directly! Always use the setter function provided by useState. to maintain consistency accross app and maintain prev state also
+    // WHY FUNCTIONAL UPDATE MATTERS
+    // ❌ PROBLEM with direct update (multiple updates)
+    function Counter() {
+        const [count, setCount] = useState(0);
+        const addThree = () => {
+            setCount(count + 1); // count is 0
+            setCount(count + 1); // count is still 0 (not 1!)
+            setCount(count + 1); // count is still 0 (not 2!)
+            // Result: count becomes 1, not 3!
+        };
+        return <button onClick={addThree}>Count: {count}</button>;
+    }
+
+    // ✅ SOLUTION with functional update
+    function Counter() {
+        const [count, setCount] = useState(0);
+        const addThree = () => {
+            setCount(prev => prev + 1); // 0 + 1 = 1
+            setCount(prev => prev + 1); // 1 + 1 = 2
+            setCount(prev => prev + 1); // 2 + 1 = 3
+            // Result: count becomes 3 ✅
+        };
+        return <button onClick={addThree}>Count: {count}</button>;
+    }
+
+    // 1. PRIMITIVES (String, Number, Boolean)
+    const [isOpen, setIsOpen] = useState(false);
+    setIsOpen(true); // Set to true
+    setIsOpen(!isOpen); // Toggle (⚠️ use functional update for reliability)
+    setIsOpen(prev => !prev); // ✅ Better toggle
+
+    // 2. ARRAYS - Must create new array (don't mutate)
+    const [items, setItems] = useState(['apple', 'banana']);
+    // Add item
+    setItems([...items, 'orange']); // Spread existing + new
+    setItems(prev => [...prev, 'orange']); // ✅ Functional
+
+    // 3. OBJECTS - Must create new object (don't mutate)
+    const [user, setUser] = useState({
+        name: 'Alice',
+        age: 25,
+        email: 'alice@example.com'
+    });
+    // Update single property
+    setUser({ ...user, age: 26 }); // Spread existing + override age
+    // Update multiple properties
+    setUser({
+        ...user,
+        age: 26,
+        email: 'newemail@example.com'
+    });
+}
+
+{
+    //      Q13: What is batching in React state updates ?
+    //          Answer : Batching is React's optimization technique where multiple state updates within the same event handler are grouped together and processed as a single re-render, rather than causing multiple re-renders. This improves performance by reducing unnecessary rendering work.
+    //          How it works: When you call multiple setState functions in the same synchronous code block(like an event handler), React batches them together and performs only one re - render after all updates are processed.
+
+    // EXAMPLE: Multiple state updates batched
+    function Form() {
+        const [firstName, setFirstName] = useState('');
+        const [lastName, setLastName] = useState('');
+        const [email, setEmail] = useState('');
+        console.log('Component rendered'); // Only logs ONCE
+
+        const handleSubmit = () => {
+            setFirstName('Alice');  // State update 1
+            setLastName('Johnson'); // State update 2
+            setEmail('alice@example.com'); // State update 3
+            // React batches all three updates → Only 1 re-render!
+        };
+
+        return (
+            <form onSubmit={handleSubmit}>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <button type="submit">Submit</button>
+            </form>
+        );
+    }
+    // WITHOUT BATCHING (Hypothetical)
+    // Would cause 3 separate re-renders:
+    // Render 1: firstName updated
+    // Render 2: lastName updated
+    // Render 3: email updated
+
+    // WITH BATCHING (React's behavior)
+    // Only 1 re-render with all three values updated
+
+    // BATCHING IN REACT 18+ (Automatic batching everywhere)
+}
+
+{
+    // Q14: What is the difference between controlled and uncontrolled components ?
+    // Answer :
+    // Controlled components are form inputs whose values are controlled by React state.The component's state is the "single source of truth" for the input's value.
+    // Uncontrolled components are form inputs that manage their own state internally using the DOM, and React accesses their values using refs when needed.
+
+    // CONTROLLED COMPONENT (Recommended)
+    // React state controls the input value
+    function ControlledForm() {
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            console.log('Email:', email); // Value from state
+            console.log('Password:', password);
+        };
+
+        return (
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="email"
+                    value={email} // ✅ Controlled by state
+                    onChange={(e) => setEmail(e.target.value)} // Updates state
+                />
+                <input
+                    type="password"
+                    value={password} // ✅ Controlled by state
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <button type="submit">Submit</button>
+            </form>
+        );
+    }
+
+    // UNCONTROLLED COMPONENT
+    // DOM controls the input value
+    // import { useRef } from 'react';
+    function UncontrolledForm() {
+        const emailRef = useRef();
+        const passwordRef = useRef();
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            console.log('Email:', emailRef.current.value); // Get value from DOM
+            console.log('Password:', passwordRef.current.value);
+        };
+
+        return (
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="email"
+                    ref={emailRef} // ❌ No value prop, no onChange
+                    defaultValue="" // Use defaultValue for initial value
+                />
+                <input
+                    type="password"
+                    ref={passwordRef}
+                    defaultValue=""
+                />
+                <button type="submit">Submit</button>
+            </form>
+        );
+    }
+    // When to use each:
+    // Controlled(99 % of the time): Dynamic forms, validation, conditional rendering, formatted inputs
+    // Uncontrolled(rare cases): File inputs(must be uncontrolled), integrating with non - React code, very simple forms
+}
+
+{
+    // Q15: General methods for Array and Objects
+    function TodoList() {
+        const [todos, setTodos] = useState([
+            { id: 1, text: 'Buy milk', completed: false },
+            { id: 2, text: 'Walk dog', completed: true }
+        ]);
+
+        // 1. ADD ITEM TO ARRAY
+        const addTodo = (text) => {
+            const newTodo = {
+                id: Date.now(),
+                text: text,
+                completed: false
+            };
+
+            // ✅ Create new array with spread
+            setTodos([...todos, newTodo]);
+            // or
+            setTodos(prev => [...prev, newTodo]);
+        };
+
+        // 2. REMOVE ITEM FROM ARRAY
+        const removeTodo = (id) => {
+            // ✅ Filter creates new array
+            setTodos(todos.filter(todo => todo.id !== id));
+        };
+
+        // 3. UPDATE ITEM IN ARRAY
+        const toggleTodo = (id) => {
+            // ✅ Map creates new array
+            setTodos(todos.map(todo =>
+                todo.id === id
+                    ? { ...todo, completed: !todo.completed } // Create new object
+                    : todo // Keep existing object
+            ));
+        };
+
+        // 4. UPDATE NESTED PROPERTY IN ARRAY
+        const updateTodoText = (id, newText) => {
+            setTodos(todos.map(todo =>
+                todo.id === id
+                    ? { ...todo, text: newText }
+                    : todo
+            ));
+        };
+
+        // 5. SORT ARRAY (sort mutates, so copy first)
+        const sortTodos = () => {
+            // ❌ Wrong: sorts original array
+            // todos.sort((a, b) => a.text.localeCompare(b.text));
+
+            // ✅ Correct: copy then sort
+            setTodos([...todos].sort((a, b) => a.text.localeCompare(b.text)));
+        };
+
+        // 5. Filter Logic
+        const filteredTodos = todos.filter(todo => {
+            if (filter === 'active') return !todo.completed;
+            if (filter === 'completed') return todo.completed;
+            return true; // 'all'
+        });
+
+        // 6. Clear Completed
+        const clearCompleted = () => {
+            setTodos(todos.filter(todo => !todo.completed));
+        };
+    }
+
+    // OBJECTS - Common operations
+    function UserProfile() {
+        const [user, setUser] = useState({
+            name: 'Alice',
+            age: 25,
+            email: 'alice@example.com',
+            address: {
+                city: 'NYC',
+                country: 'USA'
+            },
+            preferences: {
+                theme: 'dark',
+                notifications: true
+            }
+        });
+
+        // 1. UPDATE SINGLE PROPERTY
+        const updateName = (newName) => {
+            // ✅ Spread existing object, override name
+            setUser({ ...user, name: newName });
+        };
+
+        // 2. UPDATE MULTIPLE PROPERTIES
+        const updateContact = (email, phone) => {
+            setUser({
+                ...user,
+                email: email,
+                phone: phone
+            });
+        };
+
+        // 3. UPDATE NESTED OBJECT
+        const updateCity = (newCity) => {
+            setUser({
+                ...user,
+                address: {
+                    ...user.address, // Spread nested object
+                    city: newCity
+                }
+            });
+        };
+
+        // 4. UPDATE DEEPLY NESTED PROPERTY
+        const updateTheme = (newTheme) => {
+            setUser({
+                ...user,
+                preferences: {
+                    ...user.preferences,
+                    theme: newTheme
+                }
+            });
+        };
+
+        // 5. ADD NEW PROPERTY
+        const addProperty = () => {
+            setUser({
+                ...user,
+                phone: '123-456-7890' // Adds new property
+            });
+        };
+
+        // 6. REMOVE PROPERTY
+        const removeProperty = () => {
+            const { email, ...rest } = user; // Destructure to exclude email
+            setUser(rest);
+        };
+    }
+}
+
+{
+    // Q16: What is useEffect? What are side effects in React?
+    //      Answer: useEffect is a React Hook that allows you to perform side effects in functional components. It runs after the component renders and can be configured to run on specific conditions.
+    // Common side effects:
+    // Fetching data from APIs
+    // Manually changing the DOM
+    // Setting up timers (setTimeout, setInterval)
+    // Logging to console or analytics
+    // Reading/writing to localStorage
+    // Setting up event listeners
+
+    // EXAMPLE 1: Updating document title (side effect)
+    function PageTitle({ title }) {
+        useEffect(() => {
+            // Side effect: Changing document title
+            document.title = title;
+        }, [title]); // Re-run when title changes
+
+        return <h1>{title}</h1>;
+    }
+
+    // EXAMPLE 2: Fetching data (side effect)
+    function UserProfile({ userId }) {
+        const [user, setUser] = useState(null);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            setLoading(true);
+            fetch(`/api/users/${userId}`).then(response => response.json()).then(data => {
+                setUser(data);
+                setLoading(false);
+            });
+        }, [userId]); // Re-fetch when userId changes
+
+        if (loading) return <p>Loading...</p>;
+        if (!user) return <p>User not found</p>;
+        return <div>{user.name}</div>;
+    }
+
+    // EXAMPLE 3: Timer (side effect)
+    function Timer() {
+        const [seconds, setSeconds] = useState(0);
+        useEffect(() => {  // Side effect: Set up interval
+            const interval = setInterval(() => {
+                setSeconds(prev => prev + 1);
+            }, 1000);
+            // Cleanup: Clear interval
+            return () => {
+                clearInterval(interval);
+            };
+        }, []); // Run once on mount
+        return <p>Seconds: {seconds}</p>;
+    }
+}
+
+{
+    // Q17: What is the dependency array in useEffect? How does it work?
+    //      Answer: The dependency array is the second argument to useEffect that controls when the effect runs. It tells React which values the effect depends on, and React will only re-run the effect if those values change between renders.
+
+    // PATTERN 1: No dependency array - Runs after EVERY render
+    function Component1() {
+        const [count, setCount] = useState(0);
+        useEffect(() => {
+            console.log('Runs after every render'); // Runs on mount AND after every update
+        }); // ⚠️ No dependency array
+        return <button onClick={() => setCount(count + 1)}>{count}</button>;
+    } // Logs: Initial render, then after every click
+
+    // PATTERN 2: Empty dependency array [] - Runs ONCE on mount
+    function Component2() {
+        const [count, setCount] = useState(0);
+        useEffect(() => {
+            console.log('Runs only once on mount'); // Like componentDidMount in class components
+        }, []); // ✅ Empty array
+        return <button onClick={() => setCount(count + 1)}>{count}</button>;
+    } // Logs: Only on initial render, not on clicks
+
+    // PATTERN 3: With dependencies - Runs when dependencies change
+    function Component3() {
+        const [count, setCount] = useState(0);
+        const [name, setName] = useState('Alice');
+        useEffect(() => {
+            console.log('Runs when count changes');
+            document.title = `Count: ${count}`;
+        }, [count]); // ✅ Only re-runs when count changes
+        return (
+            <div>
+                <button onClick={() => setCount(count + 1)}>{count}</button>
+                <input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+        );
+    } // Effect runs: Initial render + when count changes (NOT when name changes)
+}
+
+{
+    // Q18: What is the cleanup function in useEffect? When and why do you use it?
+    //     Answer: The cleanup function is a function returned from useEffect that React calls to clean up side effects before running the effect again or when the component unmounts. It prevents memory leaks and unwanted behavior.
+
+    // EXAMPLE 2: Timers (Must cleanup!)
+    function Timer() {
+        const [seconds, setSeconds] = useState(0);
+        useEffect(() => {
+            console.log('Starting timer');
+            const intervalId = setInterval(() => {
+                setSeconds(prev => prev + 1);
+            }, 1000);
+
+            return () => { // ✅ CLEANUP: Clear interval
+                console.log('Clearing timer');
+                clearInterval(intervalId);
+            };
+        }, []); // Empty deps
+
+        return <p>{seconds} seconds</p>;
+    }
+
+    // EXAMPLE 4: Fetch requests (Cleanup for race conditions)
+    function UserProfileSafe({ userId }) {
+        const [user, setUser] = useState(null);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            let cancelled = false; // Flag to track if effect is stale
+            const fetchUser = async () => {
+                setLoading(true);
+                const response = await fetch(`https://api.example.com/users/${userId}`);
+                const data = await response.json();
+                // ✅ Only update state if effect hasn't been cancelled
+                if (!cancelled) {
+                    setUser(data);
+                    setLoading(false);
+                }
+            };
+            fetchUser();
+            // Cleanup: Mark effect as cancelled
+            return () => {
+                cancelled = true;
+            };
+        }, [userId]);
+
+        // Scenario this prevents:
+        // 1. userId = 1 → Start fetch for user 1 (slow)
+        // 2. userId = 2 → Cancel fetch 1, start fetch for user 2 (fast)
+        // 3. Fetch 2 completes → Show user 2 ✅
+        // 4. Fetch 1 completes → Ignored because cancelled ✅
+        // Without cleanup: Would show user 1 (wrong!) ❌
+        if (loading) return <p>Loading...</p>;
+        return <div>{user?.name}</div>;
+    }
+}
+
+{
+    // Q19: PAGINATION
+    function PaginatedList() {
+        const [items, setItems] = useState([]);
+        const [page, setPage] = useState(1);
+        const [loading, setLoading] = useState(false);
+        const [hasMore, setHasMore] = useState(true);
+
+        useEffect(() => {
+            const fetchPage = async () => {
+                setLoading(true);
+                const response = await fetch(`https://api.example.com/items?page=${page}`);
+                const data = await response.json();
+                setItems(prev => [...prev, ...data.items]); // Append new items
+                setHasMore(data.hasMore);
+                setLoading(false);
+            };
+            fetchPage();
+        }, [page]); // Fetch when page changes
+
+        return (
+            <div>
+                <ul>
+                    {items.map(item => (
+                        <li key={item.id}>{item.name}</li>
+                    ))}
+                </ul>
+                {loading && <p>Loading more...</p>}
+
+                {hasMore && !loading && (
+                    <button onClick={() => setPage(page + 1)}>
+                        Load More
+                    </button>
+                )}
+            </div>
+        );
+    }
+}
+
+{
+    // Q20: SEARCH WITH DEBOUNCING
+    function SearchResults() {
+        const [query, setQuery] = useState('');
+        const [results, setResults] = useState([]);
+        const [loading, setLoading] = useState(false);
+        useEffect(() => {
+            if (query.trim() === '') {
+                setResults([]);
+                return;
+            }
+            // Debounce: Wait 500ms after user stops typing
+            const timerId = setTimeout(async () => {
+                setLoading(true);
+                const response = await fetch(`https://api.example.com/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                setResults(data);
+                setLoading(false);
+            }, 500);
+            // Cleanup: Cancel previous timeout
+            return () => {
+                clearTimeout(timerId);
+            };
+        }, [query]); // Re-run when query changes
+        return (
+            <div>
+                <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search..."
+                />
+                {loading && <p>Searching...</p>}
+                <ul>
+                    {results.map(result => (
+                        <li key={result.id}>{result.title}</li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+}
+
