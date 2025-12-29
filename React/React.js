@@ -903,3 +903,541 @@ import { useEffect, useLayoutEffect, useState } from "react";
     }
 }
 
+{
+    // Q21: What are the React component lifecycle phases and how does useEffect relate to them ?**
+    //Answer:
+    // Component lifecycle refers to the series of phases a component goes through from creation to removal.In class components, there were specific lifecycle methods.In functional components with hooks, useEffect can mimic all lifecycle phases.
+    // Three main lifecycle phases:
+    //     1.  Mounting  - Component is being created and inserted into the DOM
+    //     2.  Updating  - Component is re - rendering due to prop or state changes
+    //     3.  Unmounting  - Component is being removed from the DOM
+    // CLASS COMPONENT LIFECYCLE (Old way)
+    class ClassComponent extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = { count: 0 };
+        }
+        // MOUNTING PHASE
+        componentDidMount() {
+            // Runs once after first render
+            console.log('Component mounted');
+            this.fetchData();
+            this.timerId = setInterval(() => {
+                this.setState({ count: this.state.count + 1 });
+            }, 1000);
+        }
+        // UPDATING PHASE
+        componentDidUpdate(prevProps, prevState) {
+            // Runs after every update (except first render)
+            console.log('Component updated');
+
+            if (prevProps.userId !== this.props.userId) {
+                this.fetchData();
+            }
+        }
+        // UNMOUNTING PHASE
+        componentWillUnmount() {
+            // Runs once before component is removed
+            console.log('Component will unmount');
+            clearInterval(this.timerId);
+        }
+        render() {
+            return <div>{this.state.count}</div>;
+        }
+    }
+
+    // FUNCTIONAL COMPONENT WITH USEEFFECT (Modern way)
+    function FunctionalComponent({ userId }) {
+        const [count, setCount] = useState(0);
+
+        // MIMIC componentDidMount (mount only)
+        useEffect(() => {
+            console.log('Component mounted');
+            fetchData();
+        }, []); // Empty array = run once on mount
+
+        // MIMIC componentDidMount + componentWillUnmount
+        useEffect(() => {
+            console.log('Component mounted - setting up timer');
+
+            const timerId = setInterval(() => {
+                setCount(prev => prev + 1);
+            }, 1000);
+
+            // Cleanup = componentWillUnmount
+            return () => {
+                console.log('Component unmounting - clearing timer');
+                clearInterval(timerId);
+            };
+        }, []); // Empty array = mount + unmount
+
+        // MIMIC componentDidUpdate (when userId changes)
+        useEffect(() => {
+            console.log('userId changed, fetching new data');
+            fetchData();
+        }, [userId]); // Runs when userId changes
+
+        // MIMIC componentDidUpdate (on every update)
+        useEffect(() => {
+            console.log('Component updated');
+            // Runs after every render
+        }); // No dependency array = every render
+
+        return <div>{count}</div>;
+    }
+}
+
+{
+    // Q22: useEffect vs useLayoutEffect 
+    // answer: 
+    // useEffect: useEffect runs after the browser paints the UI on the screen.
+    // Best for side effects
+    // Does not block rendering
+
+    // useLayoutEffect: useLayoutEffect runs after DOM updates but before the browser paints.
+    // Blocking
+    // Runs synchronously
+    // Used when you need to measure or modify layout before paint
+    // Example: 
+    // import { useLayoutEffect, useRef, useState } from "react";
+    function Box() {
+        const boxRef = useRef();
+        const [width, setWidth] = useState(0);
+        useLayoutEffect(() => {
+            setWidth(boxRef.current.offsetWidth);
+        }, []);
+        return (
+            <div>
+                <div ref={boxRef} style={{ width: "200px" }}>
+                    Box
+                </div>
+                <p>Width: {width}px</p>
+            </div>
+        );
+    }
+
+    // useEffect runs after the browser paints and is used for side effects,
+    // while useLayoutEffect runs synchronously after DOM updates but before paint, making it suitable for layout measurements.
+
+    // 🔥 When to Use What(Cheat Sheet)
+    // ✅ Use useEffect for:
+    // API calls
+    // Event listeners
+    // Logging
+    // Timers
+    // Subscriptions
+
+    // ✅ Use useLayoutEffect for:
+    // Measuring DOM size
+    // Scroll position fixes
+    // Animations that must not flicker
+}
+
+{
+    // Q23: What is useRef? How is it different from useState?
+    // Answer:
+    // useRef is a React Hook that creates a mutable reference object that persists across re-renders. Unlike useState, updating a ref does NOT trigger a re-render.
+
+    // Key differences:
+    // Feature	                useState	        useRef
+    // Triggers re-render	    ✅ Yes	           ❌ No
+    // Value access	            state	            ref.current
+    // Updates	                Async (batched)	    Sync (immediate)
+    // Use case	                UI data	            Non-UI data, DOM refs
+
+    // import { useState, useRef } from 'react';
+    // BASIC COMPARISON
+    function Counter() {
+        const [count, setCount] = useState(0);
+        const renderCount = useRef(0);
+        renderCount.current += 1; // This runs on every render
+
+        return (
+            <div>
+                <p>Count: {count}</p>
+                <p>Renders: {renderCount.current}</p>
+                <button onClick={() => setCount(count + 1)}>Increment</button>
+            </div>
+        );
+    }
+    // Behavior:
+    // Click button → count updates → component re-renders → renderCount increments
+    // But changing renderCount.current doesn't cause re-render
+}
+
+{
+    // COMPREHENSIVE EXAMPLE: Optimized Search with Debouncing
+    function OptimizedSearch() {
+        const [query, setQuery] = useState('');
+        const [results, setResults] = useState([]);
+        const [isSearching, setIsSearching] = useState(false);
+
+        // Refs for mutable values
+        const timeoutRef = useRef(null);
+        const requestCountRef = useRef(0);
+        const previousQueryRef = useRef('');
+        const abortControllerRef = useRef(null);
+
+        useEffect(() => {
+            // Clear previous timeout
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+
+            // Abort previous request
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+
+            if (query.trim() === '') {
+                setResults([]);
+                return;
+            }
+
+            // Debounce: Wait 500ms after typing stops
+            timeoutRef.current = setTimeout(async () => {
+                setIsSearching(true);
+                requestCountRef.current += 1;
+                const currentRequestId = requestCountRef.current;
+                abortControllerRef.current = new AbortController();
+                try {
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`,
+                        { signal: abortControllerRef.current.signal }
+                    );
+                    const data = await response.json();
+                    // Only update if this is still the latest request
+                    if (currentRequestId === requestCountRef.current) {
+                        setResults(data);
+                        previousQueryRef.current = query;
+                    }
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Search failed:', error);
+                    }
+                } finally {
+                    if (currentRequestId === requestCountRef.current) {
+                        setIsSearching(false);
+                    }
+                }
+            }, 500);
+
+            return () => {
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                }
+            };
+        }, [query]);
+
+        return (
+            <div>
+                <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search..."
+                />
+                {isSearching && <p>Searching...</p>}
+                <p>Total requests made: {requestCountRef.current}</p>
+                <p>Previous query: {previousQueryRef.current}</p>
+                <ul>
+                    {results.map(result => (
+                        <li key={result.id}>{result.title}</li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+}
+
+{
+    // Q24: What is React Context? Why do we need it?
+    // Answer: React Context is a way to share data across multiple components without passing props through every level of the component tree. It solves the "prop drilling" problem where you have to pass props through intermediate components that don't need them.
+
+    // ✅ WITH CONTEXT - Direct access without prop drilling
+    // import { createContext, useContext, useState } from 'react';
+    // 1. Create Context
+    const UserContext = createContext(null);
+    // 2. Provider wraps components that need access
+    function App() {
+        const [user, setUser] = useState({ name: 'Alice', theme: 'dark' });
+        return (
+            <UserContext.Provider value={user}>
+                <Header />
+            </UserContext.Provider>
+        );
+    }
+
+    function Header() {
+        return <Navigation />; // No user prop needed!
+    }
+    function Navigation() {
+        return <UserMenu />; // No user prop needed!
+    }
+    function UserMenu() {
+        const user = useContext(UserContext); // 3. Access context directly with useContext
+        return <div>Welcome, {user.name}! Theme: {user.theme}</div>;
+    }
+    // user data flows: App → UserContext → UserMenu (skips intermediate components)
+}
+
+{
+    // REAL-WORLD EXAMPLE: Authentication Context
+    const AuthContext = createContext(null);
+
+    function AuthProvider({ children }) {
+        const [user, setUser] = useState(null);
+        const [loading, setLoading] = useState(true);
+
+        // Check if user is logged in on mount
+        useEffect(() => {
+            const checkAuth = async () => {
+                try {
+                    const response = await fetch('/api/auth/me');
+                    if (response.ok) {
+                        const userData = await response.json();
+                        setUser(userData);
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            checkAuth();
+        }, []);
+
+        const login = async (email, password) => {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+                return { success: true };
+            }
+
+            return { success: false, error: 'Login failed' };
+        };
+
+        const logout = async () => {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            setUser(null);
+        };
+
+        const value = {
+            user,
+            loading,
+            login,
+            logout,
+            isAuthenticated: !!user
+        };
+
+        return (
+            <AuthContext.Provider value={value}>
+                {children}
+            </AuthContext.Provider>
+        );
+    }
+
+    // Custom hook
+    function useAuth() {
+        const context = useContext(AuthContext);
+
+        if (!context) {
+            throw new Error('useAuth must be used within AuthProvider');
+        }
+
+        return context;
+    }
+
+    // Usage throughout app
+    function LoginPage() {
+        const { login } = useAuth();
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+
+        const handleSubmit = async (e) => {
+            e.preventDefault();
+            const result = await login(email, password);
+
+            if (result.success) {
+                console.log('Logged in!');
+            } else {
+                alert(result.error);
+            }
+        };
+
+        return (
+            <form onSubmit={handleSubmit}>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <button type="submit">Login</button>
+            </form>
+        );
+    }
+
+    function UserProfile() {
+        const { user, logout } = useAuth();
+
+        return (
+            <div>
+                <p>Welcome, {user.name}!</p>
+                <button onClick={logout}>Logout</button>
+            </div>
+        );
+    }
+
+    function ProtectedRoute({ children }) {
+        const { isAuthenticated, loading } = useAuth();
+
+        if (loading) return <p>Loading...</p>;
+        if (!isAuthenticated) return <Navigate to="/login" />;
+
+        return children;
+    }
+
+    // App setup
+    function App() {
+        return (
+            <AuthProvider>
+                <Router>
+                    <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/profile" element={
+                            <ProtectedRoute>
+                                <UserProfile />
+                            </ProtectedRoute>
+                        } />
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        );
+    }
+}
+
+{
+    // DECISION MATRIX
+    // Context is best for:
+    // - Rarely changing global data (theme, auth, locale)
+    // - Avoiding prop drilling
+    // - Data needed by many components at different levels
+    // - Small to medium apps
+
+    // Redux/Zustand when:
+    // - Frequently changing state
+    // - Complex state logic
+    // - Need DevTools for debugging
+    // - Large apps with lots of shared state
+    // - Time-travel debugging needed
+
+    // React Query when:
+    // - Server state (API data)
+    // - Need caching
+    // - Auto-refetching
+    // - Optimistic updates
+    // - Pagination/Infinite scroll
+
+    // Props when:
+    // - Direct parent-child
+    // - Component reusability important
+    // - Simple data flow
+
+    // Local State when:
+    // - Component-specific data
+    // - No other component needs it
+    // - Simple UI state
+}
+
+{
+    //    Q25: Q1: What are custom hooks? Why do we create them?
+    //       Answer:  Custom hooks are JavaScript functions that use React hooks (useState, useEffect, etc.) to encapsulate and reuse stateful logic across multiple components. They let you extract component logic into reusable functions.
+    // Custom hooks are just functions that use React hooks internally. They don't create components, just share logic.
+
+    // WITHOUT CUSTOM HOOK - Logic duplicated in multiple components
+    function ComponentA() {
+        const [data, setData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            fetch('/api/data')
+                .then(res => res.json())
+                .then(setData)
+                .catch(setError)
+                .finally(() => setLoading(false));
+        }, []);
+
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error.message}</p>;
+        return <div>{data?.title}</div>;
+    }
+
+    function ComponentB() {
+        // Same logic repeated! ❌
+        const [data, setData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            fetch('/api/data')
+                .then(res => res.json())
+                .then(setData)
+                .catch(setError)
+                .finally(() => setLoading(false));
+        }, []);
+
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error.message}</p>;
+        return <div>{data?.description}</div>;
+    }
+
+    function useFetch(url) {
+        const [data, setData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        async function fetchData(url) {
+            setLoading(true);
+            let res = await fetch(url);
+            let data = res.json();
+            setData(data);
+        }
+
+        useEffect(() => {
+            try {
+                fetchData();
+            } catch (error) {
+                console.log(error);
+                setError(error);
+            }
+
+            return () => {
+                setLoading(false);
+                setError('');
+            }
+        }, [url]);
+
+        return { data, loading, error };
+    }
+
+    function ComponentAClean() {
+        const { data, loading, error } = useFetch('/api/data');
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error.message}</p>;
+        return <div>{data?.title}</div>;
+    }
+
+    function ComponentBClean() {
+        const { data, loading, error } = useFetch('/api/data');
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error.message}</p>;
+        return <div>{data?.description}</div>;
+    }
+}
+
