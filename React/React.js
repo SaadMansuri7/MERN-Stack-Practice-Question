@@ -1441,3 +1441,272 @@ import { useEffect, useLayoutEffect, useState } from "react";
     }
 }
 
+{
+    //Q26:      React.memo: A higher-order component (HOC) used to skip re-rendering a functional component if its props have not changed. It performs a shallow comparison of current and previous props to determine if it can reuse the last rendered result.
+    //      useMemo: A React Hook that caches the result of a calculation between re-renders. It returns a memoized value and only recalculates it when one of its specified dependencies has changed.
+    //      useCallback: A React Hook that caches a function definition between re-renders. It returns the same function instance across renders to maintain referential integrity, only recreating the function if its dependencies change. 
+
+    // import { useCallback, useState } from "react";
+    // import { Child } from "./Child"
+    const Parent = () => {
+        const [count, setCount] = useState(0);
+        const onHandle = useCallback(() => {
+            console.log('clicked!!!');
+        }, []);
+
+        return (
+            <div>
+                <button onClick={() => setCount(prev => prev + 1)}>Increment Count: ${count}</button>
+                <Child onHandle={onHandle} />
+            </div>
+        );
+        // import React from "react";
+        const Child = React.memo(function Child({ onHandle }) {
+            console.log('Child Re-render!!!!!');
+            return (
+                <button onClick={onHandle}>Click</button>
+            )
+        });
+    }
+
+
+}
+
+{
+    // Q27: What is useReducer ? When should you use it instead of useState ?
+    //     Answer : useReducer is a React Hook for managing complex state logic.It's similar to Redux reducers - you dispatch actions to update state based on action types. Use it when state updates depend on previous state or involve multiple sub-values.
+
+    const [state, dispatch] = useReducer(reducer, initialState, init); //here init is optional
+    // reducer: (state, action) => newState
+    // initialState: Initial state value
+    // init: Optional lazy initializer function
+    // Returns: [currentState, dispatch]
+}
+
+{
+    // Q28: What is React Router? Why do we need routing in React?
+    //     Answer: React Router is a library that enables navigation between different views / pages in a React application without full page reloads.It allows you to build Single Page Applications(SPAs) with multiple "pages" while maintaining a single HTML file.
+    //     npm install react-router-dom 
+
+    // Why we need routing:
+    //  Navigate between different views without page refresh
+    //  Maintain browser history(back / forward buttons work)
+    //  Shareable URLs(deep linking)
+    //  Organize app into logical sections
+    //  Code splitting by route(lazy loading)
+
+    // import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
+    function app() {
+        return (
+            <BrowserRouter>
+                <nav>
+                    <Link to="\">Dashboard</Link>
+                    <Link to="\contactus">Contact Us</Link>
+                    <Link to="\aboutus">About Us</Link>
+                </nav>
+
+                <Routes>
+                    <Route path="\" element={<Dashboard />} />
+                    <Route path="\buynow" element={<BuyNow />} />
+                    <Route path="\contactus" element={<ContactUs />} />
+                </Routes>
+            </BrowserRouter>
+        );
+    }
+}
+
+{
+    // Q29: How do you handle dynamic routes and URL parameters?
+    // Answer: Dynamic routes use URL parameters to display different content based on the URL.
+
+    // import { useParams, useSearchParams, useLocation } from 'react-router-dom';
+    // COMPREHENSIVE EXAMPLE: E-commerce Product Page
+    function ProductPage() {
+        const { productId, variant } = useParams();
+        const [searchParams, setSearchParams] = useSearchParams();
+        const navigate = useNavigate();
+        const color = searchParams.get('color') || 'black';
+        const size = searchParams.get('size') || 'M';
+        const [product, setProduct] = useState(null);
+
+        useEffect(() => {
+            fetch(`/api/products/${productId}`)
+                .then(r => r.json())
+                .then(setProduct);
+        }, [productId]);
+
+        const updateVariant = (newColor, newSize) => {
+            setSearchParams({ color: newColor, size: newSize });
+        };
+
+        const addToCart = () => {
+            // Navigate with state
+            navigate('/cart', {
+                state: {
+                    addedProduct: {
+                        id: productId,
+                        variant,
+                        color,
+                        size
+                    }
+                }
+            });
+        };
+
+        if (!product) return <p>Loading...</p>;
+        return (
+            <div>
+                <h1>{product.name}</h1>
+                <p>Variant: {variant || 'standard'}</p>
+
+                <div>
+                    <label>Color:</label>
+                    <select value={color} onChange={(e) => updateVariant(e.target.value, size)}>
+                        <option value="black">Black</option>
+                        <option value="white">White</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Size:</label>
+                    <select value={size} onChange={(e) => updateVariant(color, e.target.value)}>
+                        <option value="S">Small</option>
+                        <option value="M">Medium</option>
+                        <option value="L">Large</option>
+                    </select>
+                </div>
+                <button onClick={addToCart}>Add to Cart</button>
+            </div>
+        );
+    }
+
+    // URL Examples:
+    // /products/123 - productId: 123
+    // /products/123/premium - productId: 123, variant: premium
+    // /products/123?color=white&size=L - productId: 123, color: white, size: L
+
+    // URL Parameter Types:
+    // Path params(:id) - Part of URL structure
+    // Query params(?key = value) - Optional filters / settings
+    // Hash(#section) - Page sections
+    // State - Hidden data passed between routes
+}
+
+{
+    // Q30: How do you implement nested routes and layouts?
+    // Answer: Nested routes create hierarchical navigation with shared layouts.
+    <Routes>
+        {/* single Route */}
+        <Route path="\" element={<Dashboard />} />
+        {/* nested Route */}
+        <Route path="/auth" element={<AuthLayout />}>
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
+        </Route>
+
+        <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+        </Route>
+
+        {/* /dashboard                 - DashboardLayout
+                ├─ /dashboard            - DashboardHome
+                ├─ /dashboard/profile    - Profile
+                ├─ /dashboard/settings   - Settings */}
+    </Routes >
+}
+
+{
+    // Q31: Lazy loading allows you to split your code into smaller chunks that load only when needed, improving initial load time.
+
+    // Instead of regular imports:
+    // import Home from './pages/Home';
+    // import About from './pages/About';
+
+    // import React, { Suspense, lazy } from 'react';
+    // import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+    // Use lazy loading:
+    const Home = lazy(() => import('./pages/Home'));
+    const About = lazy(() => import('./pages/About'));
+    const Dashboard = lazy(() => import('./pages/Dashboard'));
+    const Profile = lazy(() => import('./pages/Profile'));
+
+    // Loading component
+    const LoadingSpinner = () => (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+            <h2>Loading...</h2>
+        </div>
+    );
+
+    function App() {
+        return (
+            <BrowserRouter>
+                <nav>
+                    <Link to="/">Home</Link> |
+                    <Link to="/about">About</Link> |
+                    <Link to="/dashboard">Dashboard</Link>
+                </nav>
+
+                <Suspense fallback={<LoadingSpinner />}> {/* Suspense catches lazy components while they load */}
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/profile/:id" element={<Profile />} />
+                    </Routes>
+                </Suspense>
+            </BrowserRouter>
+        );
+    }
+}
+
+{
+    // Q32: Error Boundaries: Catch JavaScript errors anywhere in the component tree.
+    class ErrorBoundary extends React.Component {
+        state = { hasError: false, error: null, errorInfo: null };
+
+        static getDerivedStateFromError(error) {
+            return { hasError: true, error }; // Update state so next render shows fallback UI
+        }
+
+        componentDidCatch(error, errorInfo) {
+            // Log error to error reporting service
+            console.error('Error caught by boundary:', error, errorInfo);
+            this.setState({ error, errorInfo });
+            // Send to logging service
+            // logErrorToService(error, errorInfo);
+        }
+
+        render() {
+            if (this.state.hasError) {
+                return (
+                    <div>
+                        <h2>Something went wrong!</h2>
+                        <details>
+                            {this.state.error && this.state.error.toString()}
+                            {this.state.errorInfo.componentStack}
+                        </details>
+                        <button onClick={() => this.setState({ hasError: false })}> Try again </button>
+                    </div>
+                );
+            }
+            return this.props.children;
+        }
+    }
+
+    function App() {
+        return (
+            <ErrorBoundary>
+                <Header />
+                <ErrorBoundary>
+                    <Sidebar />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                    <MainContent />
+                </ErrorBoundary>
+            </ErrorBoundary>
+        );
+    }
+}
