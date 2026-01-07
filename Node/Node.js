@@ -141,3 +141,61 @@
     //             "price": "50000"
     //     }
 }
+
+{
+    // Q6: Request Object(req): req contains incoming request data
+    // Common properties:
+    // req.params   // URL params
+    // req.query    // Query strings
+    // req.body     // Request body (POST/PUT)
+    // req.headers  // HTTP headers
+    // req.method   // GET, POST, etc
+    // req.url      // URL path
+
+    // Example
+    //     app.get("/info", (req, res) => {
+    //         res.json({
+    //             method: req.method,
+    //             url: req.url,
+    //             headers: req.headers,
+    //         });
+    //     });
+}
+
+{
+    // Q7: Response Object(res): res sends data back to client
+    // Common methods:
+    // res.send()
+    // res.json()
+    // res.status()
+    // res.redirect()
+
+    // Sending JSON
+    // res.json({ success: true });
+
+    // Setting Status Code
+    // res.status(201).json({
+    //     message: "User created",
+    // });
+
+    // Send + Status Together
+    // res.status(404).send("Not Found");
+}
+
+{
+    // Q8: Middleware Needed for POST Data(IMPORTANT)
+
+    // To read JSON body:
+    // app.use(express.json());
+
+    // Without this → req.body will be undefined.
+    // POST Example with Body
+    //     app.post("/login", (req, res) => {
+    //             const { email, password } = req.body;
+
+    //             res.json({
+    //                 email,
+    //                 password,
+    //             });
+    //         });
+}
