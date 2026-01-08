@@ -199,3 +199,101 @@
     //             });
     //         });
 }
+
+{
+    // Q9: What is Middleware? : Middleware is a function that runs between the request and the response.
+    // Client → Middleware → Route → Response
+
+    // In Express, everything is middleware:
+    // body parsing
+    // logging
+    // authentication
+    // error handling
+
+    // Formal Definition: A middleware function has access to:
+    //     (req, res, next)
+    //     req → incoming request
+    //     res → outgoing response
+    //     next() → passes control to next middleware
+
+    //     Basic Middleware Example
+    //         app.use((req, res, next) => {
+    //             console.log("Middleware executed");
+    //             next();
+    //         });
+
+    // If you don't call next(), the request stops there
+}
+
+{
+    // Q10: Why Middleware Exists(Real World Thinking)
+    // Imagine an office:
+    // Step	Middleware Role
+    // Security check	Auth middleware
+    // Form verification	Validation middleware
+    // Entry log	Logger middleware
+    // Final desk	Route handler
+
+}
+{
+    // Q11: Request Lifecycle(VERY IMPORTANT)
+    // Express Request Flow
+    // Request
+    // ↓
+    // Middleware 1
+    // ↓
+    // Middleware 2
+    // ↓
+    // Route Handler
+    // ↓
+    // Response
+
+    Example
+    app.use((req, res, next) => {
+        console.log("Step 1");
+        next();
+    });
+
+    app.use((req, res, next) => {
+        console.log("Step 2");
+        next();
+    });
+
+    app.get("/", (req, res) => {
+        res.send("Hello");
+    });
+
+    // Interview Line
+    // Express executes middleware top to bottom, in the order they are defined.
+}
+
+{
+    // Q11: Built -in Middleware(Express Provides These)
+    // 1. express.json(): Parses incoming JSON payload.
+    // app.use(express.json());
+
+    // Without it:
+    // req.body === undefined ❌
+
+    // 2. express.urlencoded(): Handles form data(application / x - www - form - urlencoded)
+    // app.use(express.urlencoded({ extended: true }));
+
+    // Used for:
+    //     HTML forms
+    //     traditional POST requests
+
+    // 3. express.static(): Serves static files
+    // app.use(express.static("public"));
+
+    // Folder:
+    //     public /
+    //     ├─ index.html
+    //     ├─ style.css
+    // Access directly in browser.
+
+    // Built -in Middleware Summary
+    // Middleware	Purpose
+    // express.json	Parse JSON
+    // express.urlencoded	Parse form data
+    // express.static	Serve static files
+}
