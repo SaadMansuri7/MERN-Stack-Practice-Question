@@ -297,3 +297,49 @@
     // express.urlencoded	Parse form data
     // express.static	Serve static files
 }
+
+{
+    // Q12: Custom Middleware: AuthMiddleare Example
+    const authMiddleware = (req, res, next) => {
+        const token = req.headers.authorization;
+
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        next();
+    };
+
+    app.get("/profile", authMiddleware, (req, res) => {
+        res.send("Profile data");
+    });
+
+}
+
+{
+    // Q13: Express Router- What & Why
+    // What is Express Router ? : express.Router() is a mini Express app used to:
+    // Group related routes
+    // Split routes into files
+    // Apply middleware to specific routes
+
+    // Basic Router Example
+    const express = require("express");
+    const router = express.Router();
+
+    router.get("/", (req, res) => {
+        res.send("Users list");
+    });
+
+    module.exports = router;
+
+    // Route Organization & Modularization(REAL PROJECT STYLE)
+    // Recommended Folder Structure
+    //     src /
+    //     ├─ routes /
+    //     │   ├─ user.routes.js
+    //     │   ├─ product.routes.js
+    //     │   └─ order.routes.js
+    //     ├─ app.js
+    //     └─ server.js
+}
