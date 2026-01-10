@@ -343,3 +343,70 @@
     //     ├─ app.js
     //     └─ server.js
 }
+
+{
+    // Q14: Route Prefixing : What is Route Prefixing ?
+    // Adding a common base path for routes.
+    // app.use("/users", userRoutes);
+
+
+    // This means:
+    //     router.get("/")   → /users
+    //     router.get("/:id") → /users/: id
+
+    // Nested Routes(Backend Reality)
+    // What are Nested Routes ?: Routes that depend on a parent resource.
+    //     Example:
+    //         Users → Orders
+    //         URLs:
+    //             /users/1 / orders
+    //             / users / 1 / orders / 99
+
+    // order.routes.js
+    const express = require("express");
+    const router = express.Router({ mergeParams: true });
+
+    router.get("/", (req, res) => {
+        res.send(`Orders for user ${req.params.userId}`);
+    });
+
+    router.post("/", (req, res) => {
+        res.send(`Create order for user ${req.params.userId}`);
+    });
+
+    module.exports = router;
+
+}
+
+{
+    // Q15: Clean Architecture(Mental Model)
+    // Route  →  Controller  →  Service  →  Database
+    //     Responsibility Breakdown
+    //     Layer	Responsibility
+    //     Routes	URL + HTTP method
+    //     Controllers	Handle req & res
+    //     Services	Business logic
+    //     DB / Models	Data persistence
+
+    // Folder Structure
+    // src /
+    // ├─ routes /
+    // │   └─ user.routes.js
+    // ├─ controllers /
+    // │   └─ user.controller.js
+    // ├─ services /
+    // │   └─ user.service.js
+    // ├─ app.js
+    // └─ server.js
+
+    // How Request Flows Now (IMPORTANT)
+    //     POST /users
+    //     ↓
+    //     Route
+    //     ↓
+    //     Controller (req → service → res)
+    //     ↓
+    //     Service (logic + DB)
+    //     ↓
+    //     Response
+}
