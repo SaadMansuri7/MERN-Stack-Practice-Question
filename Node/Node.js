@@ -410,3 +410,141 @@
     //     ↓
     //     Response
 }
+
+{
+    // Q16: What are Cookies? : A cookie is small data stored in the browser and sent to the server with every request.
+    // Stored on: Client(Browser)
+    // Sent via: HTTP headers
+
+    // Example 
+    //     When you log in:
+    //         Server sends a cookie → browser stores it
+    //         Browser sends that cookie on every request
+
+    // Cookie Characteristics
+    // Feature	            Cookie
+    // Stored on	        Client
+    // Size	            ~4 KB
+    // Security	        Less secure
+
+    // Example:
+    // res.cookie("user", "saad");
+
+    // Browser stores:
+    // user = saad
+
+    // Cookies in Express
+    // Install Cookie Parser: npm install cookie - parser
+
+    // Setup
+    const cookieParser = require("cookie-parser");
+    app.use(cookieParser());
+
+    // Set Cookie
+    app.get("/set-cookie", (req, res) => {
+        res.cookie("token", "abc123", {
+            httpOnly: true,
+            maxAge: 60000,
+        });
+        res.send("Cookie set");
+    });
+
+    // Read Cookie
+    app.get("/get-cookie", (req, res) => {
+        res.send(req.cookies.token);
+    });
+
+    // Important Cookie Options
+    res.cookie("key", "value", {
+        httpOnly: true, // JS can't access
+        secure: true,   // HTTPS only
+        maxAge: 60000,  // expiry
+    });
+}
+
+{
+    //     Q17: What are Sessions? : A session stores user data on the server, and only a session ID is stored in a cookie.
+    //     Stored on: Server
+    //     Cookie stores: session ID
+
+    //     Real Life Analogy
+    //         Cookie = token number
+    //         Session = file stored in server cupboard
+
+    //     Session Characteristics
+    //     Feature	            Session
+    //     Stored on	        Server
+    //     Secure	            Yes
+    //     Scalable	        Needs storage
+    //     Uses cookie	        Yes (session ID)
+
+    //     Cookies           vs              Sessions
+    //     Feature	        Cookies	        Sessions
+    //     Storage	        Client	        Server
+    //     Security	    ❌ Less	      ✅ More
+    //     Size limit	    Small	        Large
+    //     Performance	    Faster	        Slight overhead
+    //     Use case	    Preferences	    Login/auth
+
+
+    //     How Sessions Work (STEP BY STEP)
+
+    //     User logs in
+    //     Server creates session
+    //     Session ID sent as cookie
+    //     Browser stores cookie
+    //     Next request → cookie sent
+    //     Server finds session using ID
+
+
+    // Sessions in Express (express-session)
+    // Install: npm install express-session
+
+    // Setup Session Middleware
+    const session = require("express-session");
+
+    app.use(
+        session({
+            secret: "supersecret",
+            resave: false,
+            saveUninitialized: false,
+        })
+    );
+
+    // Create Session (Login)
+    app.post("/login", (req, res) => {
+        const { username } = req.body;
+
+        req.session.user = username;
+        res.send("Logged in");
+    });
+
+    // Access Session
+    app.get("/profile", (req, res) => {
+        if (!req.session.user) {
+            return res.status(401).send("Not logged in");
+        }
+
+        res.send(`Welcome ${req.session.user}`);
+    });
+
+    // Destroy Session (Logout)
+    app.post("/logout", (req, res) => {
+        req.session.destroy();
+        res.send("Logged out");
+    });
+}
+
+{
+    // Q18: When to Use What(Real Projects)
+
+    // Use Cookies when:
+    //     Theme
+    //     Language
+    //     Remember preferences
+
+    // Use Sessions when:  
+    //     Login system
+    //     Server - controlled auth
+    //     Admin panels
+}
