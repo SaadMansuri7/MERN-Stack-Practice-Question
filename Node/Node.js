@@ -548,3 +548,243 @@
     //     Server - controlled auth
     //     Admin panels
 }
+
+{
+    // Q19: COMPLETE JWT AUTHENTICATION FLOW
+    // High - Level Flow(Understand First)
+    // 1 User registers / logs in
+    // 2 Server verifies credentials
+    // 3 Server generates JWT
+    // 4 JWT sent to client
+    // 5 Client stores JWT(AuthContext)
+    // 6 Client sends JWT in headers
+    // 7 Backend middleware verifies JWT
+    // 8 Protected route accessed
+
+    // What is JWT ?: JWT(JSON Web Token) is a stateless authentication mechanism where the server issues a signed token that the client sends with every request.
+
+    // Where should JWT be stored ?
+    // Best : HTTP - only cookie
+    // Common: Memory / localStorage
+    //     localStorage is vulnerable to XSS
+
+    // What happens if JWT is stolen?
+    // Attacker can access protected routes until token expires.
+
+    // Mitigation:
+    // Short expiry
+    // Refresh tokens
+    // HTTPS
+    // HttpOnly cookies
+
+    // What is inside JWT?
+    // {
+    //   "header": { "alg": "HS256" },
+    //   "payload": { "userId": "123" },
+    //   "signature": "signed_hash"
+    // }
+
+    // Why is JWT stateless?
+    // Server does not store session data — token itself contains user info.
+
+    // How does backend verify JWT?
+    // Using jwt.verify(token, secret).
+}
+
+{
+    // BACKEND(Node.js + Express + MongoDB)
+    // Install Dependencies
+    // npm install express mongoose jsonwebtoken bcryptjs cors
+
+    // server.js (Entry Point)
+    {
+        const express = require("express");
+        const mongoose = require("mongoose");
+        const cors = require("cors");
+
+        const authRoutes = require("./routes/auth.routes");
+
+        const app = express();
+
+        app.use(express.json());
+        app.use(cors());
+
+        mongoose.connect("mongodb://127.0.0.1:27017/jwt-auth");
+
+        app.use("/api/auth", authRoutes);
+
+        app.listen(3000, () => console.log("Server running on port 3000"));
+
+        // User Model (models/User.js)
+        const mongoose = require("mongoose");
+
+        const userSchema = new mongoose.Schema({
+            email: {
+                type: String,
+                required: true,
+                unique: true
+            },
+            password: {
+                type: String,
+                required: true
+            }
+        });
+
+        module.exports = mongoose.model("User", userSchema);
+    }
+
+    // Auth Routes (routes/auth.routes.js)
+    {
+        const express = require("express");
+        const router = express.Router();
+
+        const {
+            register,
+            login,
+            profile
+        } = require("../controllers/auth.controller");
+
+        const authMiddleware = require("../middlewares/auth.middleware");
+
+        router.post("/register", register);
+        router.post("/login", login);
+        router.get("/profile", authMiddleware, profile);
+
+        module.exports = router;
+    }
+
+    // Auth Controller (controllers/auth.controller.js)
+    {
+        const User = require("../models/User");
+        const bcrypt = require("bcryptjs");
+        const jwt = require("jsonwebtoken");
+
+        const JWT_SECRET = "supersecretkey";
+
+        exports.register = async (req, res) => {
+            const { email, password } = req.body;
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            const user = await User.create({
+                email,
+                password: hashedPassword,
+            });
+
+            res.status(201).json({ message: "User registered" });
+        };
+
+        exports.login = async (req, res) => {
+            const { email, password } = req.body;
+
+            const user = await User.findOne({ email });
+            if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+            const token = jwt.sign(
+                { userId: user._id },
+                JWT_SECRET,
+                { expiresIn: "1h" }
+            );
+
+            res.json({ token });
+        };
+
+        exports.profile = async (req, res) => {
+            res.json({ userId: req.user.userId });
+        };
+    }
+
+    // JWT Middleware (middlewares/auth.middleware.js)
+    {
+        const jwt = require("jsonwebtoken");
+        const JWT_SECRET = "supersecretkey";
+
+        const authMiddleware = (req, res, next) => {
+            const authHeader = req.headers.authorization;
+
+            if (!authHeader)
+                return res.status(401).json({ message: "No token" });
+
+            const token = authHeader.split(" ")[1];
+
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                req.user = decoded;
+                next();
+            } catch (err) {
+                res.status(401).json({ message: "Invalid token" });
+            }
+        };
+
+        module.exports = authMiddleware;
+    }
+
+    // RONTEND (React + AuthContext)
+    // Auth Context (context/AuthContext.js)
+    {
+        // import { createContext, useState } from "react";
+        const AuthContext = createContext();
+        const AuthProvider = ({ children }) => {
+            const [token, setToken] = useState(
+                localStorage.getItem("token")
+            );
+
+            const login = (jwtToken) => {
+                localStorage.setItem("token", jwtToken);
+                setToken(jwtToken);
+            };
+
+            const logout = () => {
+                localStorage.removeItem("token");
+                setToken(null);
+            };
+
+            return (
+                <AuthContext.Provider value={{ token, login, logout }}>
+                    {children}
+                </AuthContext.Provider>
+            );
+        };
+    }
+
+    // Wrap App (main.jsx / index.jsx)
+    {// import ReactDOM from "react-dom/client";
+        // import App from "./App";
+        // import { AuthProvider } from "./context/AuthContext";
+
+        ReactDOM.createRoot(document.getElementById("root")).render(
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        );
+    }
+
+    // Login API Call (Store Token)
+    {
+        const loginUser = async () => {
+            const res = await fetch("http://localhost:3000/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: "test@test.com",
+                    password: "123456",
+                }),
+            });
+
+            const data = await res.json();
+            login(data.token);
+        };
+    }
+
+    // Protected API Call (Send Token)
+    {
+        fetch("http://localhost:3000/api/auth/profile", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+    }
+}
